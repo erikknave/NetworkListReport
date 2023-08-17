@@ -1,0 +1,5 @@
+name: report_app
+dependencies:
+  - pip
+  - pip:
+    - openpyxl

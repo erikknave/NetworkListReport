@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import altair as alt
+import requests
+import io
 
 
 # Title for the app
@@ -25,9 +27,15 @@ def iso_to_gregorian(iso_year, iso_week, iso_day):
 
 
 def generate_report():
-    df = pd.read_excel("Network_List.xlsx", sheet_name="Lista")
+    # df = pd.read_excel("Network_List.xlsx", sheet_name="Lista")
+    # df = pd.read_csv(st.secrets["public_gsheets_url"])
+    response = requests.get(
+        st.secrets["public_gsheets_url"],
+        verify=False,
+    )
+    df = pd.read_csv(io.StringIO(response.content.decode("utf-8")))
 
-    # Convert the date columns to week numbers
+    #  Convert the date columns to week numbers
     df["Week of Senaste kontakt"] = (
         pd.to_datetime(df["Senaste kontakt"]).dt.isocalendar().week
     )

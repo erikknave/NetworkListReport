@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import altair as alt
 
-# pip install openpyxl
 
 # Title for the app
 st.set_page_config(layout="wide")

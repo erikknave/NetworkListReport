@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import altair as alt
+import openpyxl
 
 # Title for the app
 st.set_page_config(layout="wide")
@@ -24,7 +25,7 @@ def iso_to_gregorian(iso_year, iso_week, iso_day):
 
 
 def generate_report():
-    df = pd.read_excel("Network_List.xlsx", sheet_name="Lista", engine="openpyxl")
+    df = pd.read_excel("Network_List.xlsx", sheet_name="Lista")
 
     # Convert the date columns to week numbers
     df["Week of Senaste kontakt"] = (

@@ -186,13 +186,7 @@ with col1:
     if not previous_data.equals(merged_data):
         previous_data.to_csv(csv_file_path, index=False)
         st.experimental_rerun()
-    "merged_data: "
-    merged_data
-    # if not merged_data2.equals(merged_data):
-    # previous_data = merged_data2
-    # merged_data = merged_data2
-    # on_updated_cell()
-    # Button to delete the CSV file
+
     subcols = st.columns([0.18, 0.25, 0.57], gap="small")
     with subcols[0]:
         if st.button("Delete CSV"):

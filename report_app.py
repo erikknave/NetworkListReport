@@ -163,7 +163,7 @@ merged_data = merged_data[
 ]
 
 
-# Plotting the grap
+# Plotting the graph
 col1, col2 = st.columns([1, 1])
 with col1:
     "Weekly report - Values"

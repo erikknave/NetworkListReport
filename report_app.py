@@ -176,11 +176,14 @@ def on_updated_cell():
 col1, col2 = st.columns([1, 1])
 with col1:
     "Weekly report - Values"
-    previous_data = st.data_editor(
+    merged_data2 = st.data_editor(
         merged_data,
         disabled=("Week", "Start", "End"),
         hide_index=True,
     )
+    if not merged_data2.equals(merged_data):
+        merged_data = merged_data2
+        on_updated_cell()
     # Button to delete the CSV file
     subcols = st.columns([0.18, 0.25, 0.57], gap="small")
     with subcols[0]:

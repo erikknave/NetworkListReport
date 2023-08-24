@@ -168,6 +168,7 @@ merged_data = merged_data[
 
 def on_updated_cell():
     if update_csv:
+        pass
         merged_data.to_csv(csv_file_path, index=False)
         st.experimental_rerun()
 
@@ -176,14 +177,21 @@ def on_updated_cell():
 col1, col2 = st.columns([1, 1])
 with col1:
     "Weekly report - Values"
-    merged_data2 = st.data_editor(
+
+    previous_data = st.data_editor(
         merged_data,
         disabled=("Week", "Start", "End"),
         hide_index=True,
     )
-    if not merged_data2.equals(merged_data):
-        merged_data = merged_data2
-        on_updated_cell()
+    if not previous_data.equals(merged_data):
+        previous_data.to_csv(csv_file_path, index=False)
+        st.experimental_rerun()
+    "merged_data: "
+    merged_data
+    # if not merged_data2.equals(merged_data):
+    # previous_data = merged_data2
+    # merged_data = merged_data2
+    # on_updated_cell()
     # Button to delete the CSV file
     subcols = st.columns([0.18, 0.25, 0.57], gap="small")
     with subcols[0]:

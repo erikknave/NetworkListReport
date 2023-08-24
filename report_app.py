@@ -5,6 +5,9 @@ import altair as alt
 import requests
 import io
 import os  # <-- Imported the os module
+import time
+
+update_csv = True
 
 # Title for the app
 st.set_page_config(layout="wide")
@@ -163,18 +166,46 @@ merged_data = merged_data[
 ]
 
 
+def on_updated_cell():
+    if update_csv:
+        merged_data.to_csv(csv_file_path, index=False)
+        st.experimental_rerun()
+
+
 # Plotting the graph
 col1, col2 = st.columns([1, 1])
 with col1:
     "Weekly report - Values"
-    edited_merged_data = st.data_editor(
-        merged_data, disabled=("Week", "Start", "End"), hide_index=True
+    previous_data = st.data_editor(
+        merged_data,
+        disabled=("Week", "Start", "End"),
+        hide_index=True,
     )
+    # Button to delete the CSV file
+    subcols = st.columns([0.18, 0.25, 0.57], gap="small")
+    with subcols[0]:
+        if st.button("Delete CSV"):
+            if os.path.exists(csv_file_path):
+                os.remove(csv_file_path)
+                update_csv = False
+                st.success(f"'{csv_file_path}' has been deleted!")
+                time.sleep(1)
+                st.experimental_rerun()
+            else:
+                st.warning(f"'{csv_file_path}' does not exist!")
+    with subcols[1]:
+        st.download_button(
+            label="Download CSV",
+            data=merged_data.to_csv(index=False),
+            file_name="statistics_data.csv",
+            mime="text/csv",
+        )
+
 
 with col2:
     "Weekly report - Chart"
     altair_data = pd.melt(
-        edited_merged_data,
+        merged_data,
         id_vars=["Week"],
         value_vars=["Contacts made", "Meetings planned", "Meetings performed"],
     )
@@ -205,4 +236,5 @@ with col2:
         st.altair_chart(chart, theme=None, use_container_width=True)
 
 # Save merged data to the CSV
-edited_merged_data.to_csv(csv_file_path, index=False)
+if update_csv:
+    merged_data.to_csv(csv_file_path, index=False)

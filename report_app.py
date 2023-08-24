@@ -12,7 +12,7 @@ update_csv = True
 # Title for the app
 st.set_page_config(layout="wide")
 with st.container():
-    cols = st.columns([1, 1, 1])
+    cols = st.columns([0.2, 0.6, 0.2])
     with cols[1]:
         st.title("Eriks Networking Sheet Reporting")
 

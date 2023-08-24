@@ -4,7 +4,7 @@ import numpy as np
 import altair as alt
 import requests
 import io
-
+import os  # <-- Imported the os module
 
 # Title for the app
 st.set_page_config(layout="wide")
@@ -27,7 +27,7 @@ def iso_to_gregorian(iso_year, iso_week, iso_day):
 
 
 def generate_report():
-    # df = pd.read_excel("Network_List.xlsx", sheet_name="Lista")
+    # df = pd.read_excel("Network_List.xlsx", sheet_name="Leads")
     # df = pd.read_csv(st.secrets["public_gsheets_url"])
     response = requests.get(
         st.secrets["public_gsheets_url"],
@@ -105,20 +105,76 @@ def generate_report():
     return report_df
 
 
+# 1. Check if 'statistics_data.csv' exists, if not, create it
+csv_file_path = "statistics_data.csv"  # <-- Path to the CSV file
+if not os.path.exists(csv_file_path):
+    pd.DataFrame(
+        columns=["Week", "Contacts made", "Meetings planned", "Meetings performed"]
+    ).to_csv(csv_file_path, index=False)
+
+# Load previous data from the CSV
+previous_data = pd.read_csv(csv_file_path)
+
+# Generate the new report data
 report_data = generate_report()
+
+# Create a dataframe with all weeks
+all_weeks = pd.DataFrame({"Week": list(range(1, 54))})
+
+# Ensure that all weeks are present in both dataframes
+report_data = all_weeks.merge(report_data, on="Week", how="left")
+previous_data = all_weeks.merge(previous_data, on="Week", how="left")
+
+# Merge data to get the maximum values for each week and interaction type
+merged_data = report_data.merge(
+    previous_data, on="Week", how="outer", suffixes=("_report", "_csv")
+)
+for column in ["Contacts made", "Meetings planned", "Meetings performed"]:
+    merged_data[column] = merged_data[[f"{column}_report", f"{column}_csv"]].max(axis=1)
+    merged_data.drop(columns=[f"{column}_report", f"{column}_csv"], inplace=True)
+
+# Handle the Start and End date columns
+if "Start_report" in merged_data.columns and "Start_csv" in merged_data.columns:
+    merged_data["Start"] = merged_data["Start_report"].combine_first(
+        merged_data["Start_csv"]
+    )
+    merged_data["End"] = merged_data["End_report"].combine_first(merged_data["End_csv"])
+    merged_data.drop(
+        columns=["Start_report", "End_report", "Start_csv", "End_csv"], inplace=True
+    )
+elif "Start_report" in merged_data.columns:
+    merged_data["Start"] = merged_data["Start_report"]
+    merged_data["End"] = merged_data["End_report"]
+    merged_data.drop(columns=["Start_report", "End_report"], inplace=True)
+elif "Start_csv" in merged_data.columns:
+    merged_data["Start"] = merged_data["Start_csv"]
+    merged_data["End"] = merged_data["End_csv"]
+    merged_data.drop(columns=["Start_csv", "End_csv"], inplace=True)
+
+# Drop rows where all columns (except 'Week') are NaN
+merged_data = merged_data.dropna(
+    subset=["Start", "End", "Contacts made", "Meetings planned", "Meetings performed"],
+    how="all",
+)
+
+# Reorder columns
+merged_data = merged_data[
+    ["Week", "Start", "End", "Contacts made", "Meetings planned", "Meetings performed"]
+]
 
 
 # Plotting the grap
-
 col1, col2 = st.columns([1, 1])
 with col1:
     "Weekly report - Values"
-    report_data
+    edited_merged_data = st.data_editor(
+        merged_data, disabled=("Week", "Start", "End"), hide_index=True
+    )
 
 with col2:
     "Weekly report - Chart"
     altair_data = pd.melt(
-        report_data,
+        edited_merged_data,
         id_vars=["Week"],
         value_vars=["Contacts made", "Meetings planned", "Meetings performed"],
     )
@@ -147,3 +203,6 @@ with col2:
 
     with cols[0]:
         st.altair_chart(chart, theme=None, use_container_width=True)
+
+# Save merged data to the CSV
+edited_merged_data.to_csv(csv_file_path, index=False)
